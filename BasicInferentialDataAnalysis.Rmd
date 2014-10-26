@@ -1,0 +1,109 @@
+---
+output: pdf_document
+---
+Statistical Inference: Peer Assessment 2
+----------------------------------------
+
+##  Basic Inferential Data Analysis  
+
+###  Data Analysis
+Analyze the ToothGrowth data in R datasets package.
+### Visible settings
+```{r}
+echo = TRUE
+options(scipen = 1)
+```
+
+### 1. Load the ToothGrowth data and perform some basic exploratory data analyses
+
+```{r}
+### Load the dataset
+library(datasets)
+
+### Perfrom some basic exploratory data analyses
+
+### look at the dataset variables
+data(ToothGrowth)
+head(ToothGrowth)
+### convert variable dose from numeric to factor
+dose <- as.factor(ToothGrowth$dose)
+supp <- as.factor(ToothGrowth$supp)
+### number of dataset rows
+nrow(ToothGrowth)
+### number of dataset columns
+ncol(ToothGrowth)
+```  
+
+### 2. Provide a basic summary of the data.  
+
+```{r}  
+### Summary of all variables
+summary(ToothGrowth)
+### split of cases between different dose levels and delivery methods
+table(dose,supp)
+
+library(ggplot2)
+### Plot Graph
+ggplot(data=ToothGrowth, aes(x=as.factor(dose), y=len, fill=supp)) +
+    geom_bar(stat="identity",) +
+    facet_grid(. ~ supp) +
+    xlab("Dose in miligrams") +
+    ylab("Tooth length") +
+    guides(fill=guide_legend(title="Supplement type"))
+``` 
+
+Based on the above figure, there is a positive correlation between the tooth length and the dose levels of Vitamin C, for both delivery methods.  
+
+### 3. Use confidence intervals and hypothesis tests to compare tooth growth by supp and dose.  
+
+95% confidence intervals for two variables and the intercept are below shown data: 
+
+```{r}
+fit <- lm(len ~ dose + supp, data=ToothGrowth)
+confint(fit)
+```  
+
+The confidence intervals are a different set of data and parameters of the linear model many times, 95% of the time, the coefficient estimations will be in these ranges. The effect of the dose can also be identified using regression analysis. 
+
+```{r}
+summary(fit)
+```
+The model explains 70% of the variance in the data.
+
+From the reuslt, both 0.5 and 1.0 dosage tests can reject the null hypothesis and be confident that there is significant impact on the tooth length between OJ vs VC. For 2.0 dosage, the p-value suggests keeping the null hypothesis.
+
+When delivery method are not considered for p-value, it is purely calculated on different dosage. Reading the p-value from the result, all three dosage comparison can have their null hypothesis rejected.
+
+### 4. State your conclusions and the assumptions needed for your conclusions
+
+```{r}
+###Compute P-values and for confidence intervals supp and dose.
+groups<-as.data.frame(split(ToothGrowth$len,list(supp,dose)))
+rnames<-vector()
+c<-0
+for ( i in 1:5 ) for ( j in (i+1):6 ) { c<-c+1; rnames[c]<-paste(as.character(names(groups)[i]),as.character(names(groups)[j]),sep="~") }
+htest<-matrix(data=NA,nrow=length(rnames),ncol=3,byrow=TRUE,dimnames=list(rnames,c("P-value","Conf int", "Conf int")))
+c<-0
+for ( i in 1:5 ) for ( j in (i+1):6 )  {
+    c<-c+1;
+    htest[c,1]<-t.test(groups[,i],groups[,j])$p.value;
+    htest[c,2]<-t.test(groups[,i],groups[,j])$conf.int[1];
+    htest[c,3]<-t.test(groups[,i],groups[,j])$conf.int[2]
+}
+htest
+```
+### Based on the above data, the conclusions are:
+1.By ignoring the supplement types, there is a significant difference in tooth length between the dose levels, with higher doses resulting in longer teeth.
+
+2.By considering dose levels and supplement types, OJ creates longer teeth than VC at dose levels of 0.5 mg and 1.0 mg, but at dose levels of 2.0 mg, there is no significant difference in teeth length between the two supplement types.
+
+### Assumptions:
+1. We assume that the populations are independent. 
+
+2. The measurements were unaware of the dosages and supplement types.
+
+*** Important Note: *** Please see the below links for reports
+
+rpubs --> http://rpubs.com/srikanthkamineni/36150
+
+github --> https://github.com/srikanthkamineni/Statistical-Inference-Project2.git
